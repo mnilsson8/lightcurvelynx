@@ -327,7 +327,8 @@ class FBOTModel(SEDModel):
         Brian D. Metzger (2022) DOI: 10.3847/1538-4357/ac6d59
         """
         params = self.get_local_params(state)
-
+        print("pre solve", times)
+        print([np.log(times[0]), np.log(times[-1])])
         sol = solve_ivp(
             self._rhs,
             [np.log(times[0]), np.log(times[-1])],
@@ -338,8 +339,9 @@ class FBOTModel(SEDModel):
             atol=1e30,
             dense_output=True,
         )
+
         # t = np.logspace(np.log10(times[0]), np.log10(times[-1]), 800)
-        R_slow, R_fast = params["vslow"] * times, params["vfast"] * times
+        R_slow, R_fast = params["vslow"] * times, params["vfast"] * const.c.cgs.value * times
         # print(times/86400)
 
         E_eq, E_pol = sol.sol(np.log(times))
@@ -384,8 +386,13 @@ class FBOTModel(SEDModel):
         """
         state = graph_state
         params = self.get_local_params(graph_state)
-        print("original times", times[-1])
+
+        print("original times", len(times))
+
         times_new = np.array(times - params["t0"]) * 86400.0  # time from merger in days to seconds
+
+        print("new t", len(times_new))
+
         Rs, Ls = self._fbot_luminosity(times_new, state)
         # print("hi", Rs[0][0], Ls[0][8])
         T_slow = (Ls[0] / (4 * np.pi * (Rs[0] ** 2) * const.sigma_sb.cgs.value)) ** 0.25
